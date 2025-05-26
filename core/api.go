@@ -328,6 +328,7 @@ func (c *Client) HandleResponse(body io.ReadCloser, stream bool, gc *gin.Context
 		for _, block := range response.Blocks {
 			// Handle reasoning plan blocks (thinking)
 			if block.ReasoningPlanBlock != nil && len(block.ReasoningPlanBlock.Goals) > 0 {
+
 				res_text := ""
 				if !inThinking && !thinkShown {
 					res_text += "<think>"
@@ -345,6 +346,8 @@ func (c *Client) HandleResponse(body io.ReadCloser, stream bool, gc *gin.Context
 				}
 				model.ReturnOpenAIResponse(res_text, stream, gc)
 			}
+		}
+		for _, block := range response.Blocks {
 			if block.MarkdownBlock != nil && len(block.MarkdownBlock.Chunks) > 0 {
 				res_text := ""
 				if inThinking {
@@ -446,9 +449,10 @@ func (c *Client) createUploadURL(filename string, contentType string) (*UploadUR
 
 func (c *Client) UploadImage(img_list []string) error {
 	logger.Info(fmt.Sprintf("Uploading %d images to Cloudinary", len(img_list)))
-	filename := utils.RandomString(5) + ".jpg"
+
 	// Upload images to Cloudinary
 	for _, img := range img_list {
+		filename := utils.RandomString(5) + ".jpg"
 		// Create upload URL
 		uploadURLResponse, err := c.createUploadURL(filename, "image/jpeg")
 		if err != nil {
@@ -467,7 +471,9 @@ func (c *Client) UploadImage(img_list []string) error {
 }
 
 func (c *Client) UloadFileToCloudinary(uploadInfo CloudinaryUploadInfo, contentType string, filedata string, filename string) error {
-	logger.Info(fmt.Sprintf("filedata: %s ……", filedata[:50]))
+	if len(filedata) > 100 {
+		logger.Info(fmt.Sprintf("filedata: %s ……", filedata[:50]))
+	}
 	// Add form fields
 	logger.Info(fmt.Sprintf("Uploading file %s to Cloudinary", filename))
 	var formFields map[string]string
